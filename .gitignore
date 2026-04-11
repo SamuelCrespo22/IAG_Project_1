@@ -1,0 +1,67 @@
+# ==========================================
+# 1. Dados e Resultados (O mais importante!)
+# ==========================================
+# Ignorar o dataset inteiro
+data/*
+!data/.gitkeep  # Permite manter a pasta 'data' vazia no repositório
+
+# Ignorar os pesos dos modelos (ficheiros muito pesados)
+results/checkpoints/*.pt
+results/checkpoints/*.pth
+results/checkpoints/*.ckpt
+
+# (Opcional) Ignorar imagens geradas se forem demasiadas, 
+# mas podes querer comentar isto se quiseres partilhar alguns exemplos
+# results/samples/*.png
+# results/samples/*.jpg
+
+# ==========================================
+# 2. Python e Ambientes Virtuais
+# ==========================================
+# Ficheiros compilados do Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambientes virtuais
+venv/
+env/
+.env
+.venv/
+
+# ==========================================
+# 3. Jupyter Notebooks e Logs
+# ==========================================
+.ipynb_checkpoints/
+wandb/
+runs/
+*.log
+
+# ==========================================
+# 4. Relatório em LaTeX (Ficheiros Temporários)
+# ==========================================
+# Quando compilas o LaTeX, ele gera muito "lixo". Ignora tudo menos o .tex e as imagens
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+# Podes querer ignorar PDFs gerados a meio do processo:
+# report/*.pdf 
+
+# ==========================================
+# 5. Ficheiros do Sistema Operativo e IDEs
+# ==========================================
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# VS Code / PyCharm
+.vscode/
+.idea/

@@ -1,0 +1,1 @@
+# Ciclos de treino genéricos

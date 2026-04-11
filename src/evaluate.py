@@ -1,0 +1,1 @@
+# Scripts para gerar imagens e calcular FID/KID
