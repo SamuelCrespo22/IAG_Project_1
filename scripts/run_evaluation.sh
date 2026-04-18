@@ -1,1 +1,0 @@
-# Script para automatizar a geração e avaliação de modelos

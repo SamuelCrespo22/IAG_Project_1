@@ -150,7 +150,7 @@ def load_kaggle_artbench10_splits(kaggle_root):
     return DatasetDict(train=train_ds, test=test_ds)
 
 
-def resolve_dataset_splits(dataset_id, seed=42, dataset_source="hf", kaggle_root="ArtBench-10", default_source="hf"):
+def resolve_dataset_splits(dataset_id, seed=42, dataset_source="hf", kaggle_root="../ArtBench-10", default_source="hf"):
     source = dataset_source_name(dataset_source, default_source=default_source)
     if source in KAGGLE_SOURCE_NAMES:
         return load_kaggle_artbench10_splits(kaggle_root)

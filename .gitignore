@@ -2,6 +2,7 @@
 # 1. Dados e Resultados (O mais importante!)
 # ==========================================
 # Ignorar o dataset inteiro
+ArtBench-10/
 data/*
 !data/.gitkeep  # Permite manter a pasta 'data' vazia no repositório
 
