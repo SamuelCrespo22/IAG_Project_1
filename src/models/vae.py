@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 # ======================================================
-# Variational Autoencoder Convolucional
+# Convolutional Variational Autoencoder
 # ======================================================
 
 class ConvVAE(nn.Module):
@@ -11,7 +11,7 @@ class ConvVAE(nn.Module):
         super().__init__()
 
         # ---------------- Encoder ----------------
-        # Recebe imagens (3, 32, 32) e extrai features espaciais
+        # Receives images (3, 32, 32) and extracts spatial features.
         self.encoder = nn.Sequential(
             nn.Conv2d(3, 32, kernel_size=4, stride=2, padding=1),  # -> (32, 16, 16)
             nn.ReLU(),
@@ -20,36 +20,36 @@ class ConvVAE(nn.Module):
             nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1) # -> (128, 4, 4)
         )
 
-        # Camadas que produzem média e variância do espaço latente
+        # Layers that produce mean and variance of the latent space.
         self.fc_mu = nn.Linear(128 * 4 * 4, latent_dim)
         self.fc_logvar = nn.Linear(128 * 4 * 4, latent_dim)
 
         # ---------------- Decoder ----------------
-        # Expande o vetor latente de volta para um mapa de features
+        # Expands the latent vector back to a feature map.
         self.fc_dec = nn.Linear(latent_dim, 128 * 4 * 4)
 
-        # Reconstrói a imagem usando convoluções transpostas
+        # Reconstructs the image using transposed convolutions.
         self.decoder = nn.Sequential(
             nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),  # -> (64, 8, 8)
             nn.ReLU(),
             nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),   # -> (32, 16, 16)
             nn.ReLU(),
             nn.ConvTranspose2d(32, 3, kernel_size=4, stride=2, padding=1),    # -> (3, 32, 32)
-            nn.Sigmoid()  # Garante valores entre 0 e 1
+            nn.Sigmoid()
         )
 
     # --------------------------------------------------
-    # Encoder: imagem → parâmetros da distribuição
+    # Encoder: image → distribution parameters
     # --------------------------------------------------
     def encode(self, x):
         h = self.encoder(x)
-        h = h.view(h.size(0), -1)  # flatten
+        h = h.view(h.size(0), -1)  # flatten.
         mu = self.fc_mu(h)
         logvar = self.fc_logvar(h)
         return mu, logvar
 
     # --------------------------------------------------
-    # Reparametrização: amostra diferenciável
+    # Reparameterization: differentiable sample
     # --------------------------------------------------
     def reparameterize(self, mu, logvar):
         std = torch.exp(0.5 * logvar)
@@ -57,7 +57,7 @@ class ConvVAE(nn.Module):
         return mu + eps * std
 
     # --------------------------------------------------
-    # Decoder: espaço latente → imagem
+    # Decoder: latent space → image
     # --------------------------------------------------
     def decode(self, z):
         h = self.fc_dec(z)
@@ -65,7 +65,7 @@ class ConvVAE(nn.Module):
         return self.decoder(h)
 
     # --------------------------------------------------
-    # Passo completo do VAE
+    # Full VAE pass
     # --------------------------------------------------
     def forward(self, x):
         mu, logvar = self.encode(x)
@@ -75,13 +75,13 @@ class ConvVAE(nn.Module):
 
 
 # ======================================================
-# Função de perda do VAE
+# VAE loss function
 # ======================================================
 def vae_loss(recon_x, x, mu, logvar):
     """
-    Combina:
-    - erro de reconstrução da imagem
-    - divergência KL (regularização do espaço latente)
+    Combines:
+    - image reconstruction error
+    - KL divergence (latent space regularization)
     """
     recon_loss = F.binary_cross_entropy(recon_x, x, reduction="sum")
     kl_div = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())

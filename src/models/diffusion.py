@@ -3,9 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
-# ======================================================
-# Time embedding sinusoidal
-# ======================================================
+# =================================================================
+# Sinusoidal Time Embedding (Encodes the timestep 't')
+# =================================================================
 class SinusoidalTimeEmbedding(nn.Module):
     def __init__(self, dim):
         super().__init__()
@@ -21,9 +21,9 @@ class SinusoidalTimeEmbedding(nn.Module):
         return emb
 
 
-# ======================================================
-# Bloco convolucional com GroupNorm + time embedding
-# ======================================================
+# =================================================================
+# Convolutional Block with GroupNorm and Time Embedding injection
+# =================================================================
 class ConvBlock(nn.Module):
     def __init__(self, in_ch, out_ch, time_dim, groups=8):
         super().__init__()
@@ -44,9 +44,9 @@ class ConvBlock(nn.Module):
         return F.relu(h + t)
 
 
-# ======================================================
-# U-Net simétrica para imagens 32x32
-# ======================================================
+# =================================================================
+# Symmetric U-Net for 32x32 images
+# =================================================================
 class UNet32(nn.Module):
     def __init__(self, time_dim=128):
         super().__init__()
@@ -69,38 +69,43 @@ class UNet32(nn.Module):
         self.mid = ConvBlock(256, 256, time_dim)
 
         # -------- Decoder --------
-        self.up3 = nn.ConvTranspose2d(256, 128, 2, stride=2)
-        self.dec3 = ConvBlock(256, 128, time_dim)
+        # Fix: Ensure channels match exactly after torch.cat
+        self.up3 = nn.ConvTranspose2d(256, 256, 2, stride=2)
+        # 256 (from up3) + 256 (from x3) = 512 input channels
+        self.dec3 = ConvBlock(512, 128, time_dim) 
 
-        self.up2 = nn.ConvTranspose2d(128, 64, 2, stride=2)
-        self.dec2 = ConvBlock(128, 64, time_dim)
+        self.up2 = nn.ConvTranspose2d(128, 128, 2, stride=2)
+        # 128 (from up2) + 128 (from x2) = 256 input channels
+        self.dec2 = ConvBlock(256, 64, time_dim)
 
         self.up1 = nn.ConvTranspose2d(64, 64, 2, stride=2)
-        self.dec1 = ConvBlock(64 + 3, 64, time_dim)
+        # 64 (from up1) + 64 (from x1) = 128 input channels
+        self.dec1 = ConvBlock(128, 64, time_dim)
 
-        # Saída final: prever ruído
+        # Final Output: Predict the noise added to the image
         self.out = nn.Conv2d(64, 3, 1)
 
     def forward(self, x, t):
         t_emb = self.time_mlp(t)
 
-        # Encoder
-        x1 = self.enc1(x, t_emb)          # 32x32
-        x2 = self.enc2(self.pool(x1), t_emb)  # 16x16
-        x3 = self.enc3(self.pool(x2), t_emb)  # 8x8
+        # -------- Encoder --------
+        x1 = self.enc1(x, t_emb)              # Output: 32x32, 64 ch
+        x2 = self.enc2(self.pool(x1), t_emb)  # Output: 16x16, 128 ch
+        x3 = self.enc3(self.pool(x2), t_emb)  # Output: 8x8,  256 ch
 
-        # Bottleneck
-        h = self.mid(self.pool(x3), t_emb)    # 4x4
+        # -------- Bottleneck --------
+        h = self.mid(self.pool(x3), t_emb)    # Output: 4x4,  256 ch
 
-        # Decoder (simétrico)
-        h = self.up3(h)                       # 8x8
+        # -------- Decoder --------
+        h = self.up3(h)                       # Output: 8x8, 256 ch
         h = self.dec3(torch.cat([h, x3], dim=1), t_emb)
 
-        h = self.up2(h)                       # 16x16
+        h = self.up2(h)                       # Output: 16x16, 128 ch
         h = self.dec2(torch.cat([h, x2], dim=1), t_emb)
 
-        h = self.up1(h)                       # 32x32
-        h = self.dec1(torch.cat([h, x], dim=1), t_emb)
+        h = self.up1(h)                       # Output: 32x32, 64 ch
+        # Notice we concatenate with x1 (Encoder feature map), not x (Raw image)
+        h = self.dec1(torch.cat([h, x1], dim=1), t_emb)
 
         return self.out(h)
 
@@ -112,9 +117,9 @@ def linear_beta_schedule(T):
     return torch.linspace(1e-4, 0.02, T)
 
 
-# ======================================================
-# DDPM
-# ======================================================
+# =================================================================
+# DDPM (Denoising Diffusion Probabilistic Models) Process
+# =================================================================
 class DDPM:
     def __init__(self, model, T=1000, device="cpu"):
         self.model = model.to(device)

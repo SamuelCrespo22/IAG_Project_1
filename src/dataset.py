@@ -1,6 +1,7 @@
 from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
+import os
 
 from artbench_local_dataset import resolve_dataset_splits
 
@@ -24,7 +25,10 @@ class ArtBenchPyTorchWrapper(Dataset):
             
         return image, label
 
-def get_dataloader(model_type="gan", batch_size=64, use_subset=True, subset_fraction=0.2, data_source="hf", kaggle_root="../ArtBench-10", split="train"):
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_KAGGLE_ROOT = os.path.join(os.path.dirname(CURRENT_DIR), "ArtBench-10")
+
+def get_dataloader(model_type="gan", batch_size=64, use_subset=True, subset_fraction=0.2, data_source="hf", kaggle_root=DEFAULT_KAGGLE_ROOT, split="train"):
     """
     model_type: "vae", "gan", "wgan", or "diffusion".
     use_subset: If True, use only 20% of data (for Phase 1). Only applies to 'train' split.
@@ -48,7 +52,7 @@ def get_dataloader(model_type="gan", batch_size=64, use_subset=True, subset_frac
     hf_dataset = ds_dict[split]
 
     # ====================================================
-    # Define Transformations.
+    # Define Transformations
     # ====================================================
 
     if model_type == "vae": # VAE (uses sigmoid) Dataloader must be in [0, 1].
@@ -68,7 +72,7 @@ def get_dataloader(model_type="gan", batch_size=64, use_subset=True, subset_frac
         raise ValueError("invalid model_type!")
 
     # ====================================================
-    # 20% Subset Logic (applies only to train split).
+    # 20% Subset Logic (applies only to train split)
     # ====================================================
     
     if use_subset and split == "train":
@@ -81,7 +85,7 @@ def get_dataloader(model_type="gan", batch_size=64, use_subset=True, subset_frac
         print(f"[DataLoader] Using full '{split}' split with {len(hf_dataset)} samples.")
 
     # ====================================================
-    # Create PyTorch Dataset and DataLoader.
+    # Create PyTorch Dataset and DataLoader
     # ==================================================== 
 
     pytorch_dataset = ArtBenchPyTorchWrapper(hf_dataset, transform=transform)

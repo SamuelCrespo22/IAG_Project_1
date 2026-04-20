@@ -1,0 +1,2 @@
+Experiment_Name,Model,Epochs,Batch_Size,LR,Latent_Dim,Notes,FID_mean,FID_std,KID_mean,KID_std,IS_mean,IS_std,LPIPS_mean,LPIPS_std,Total_Time_s,Avg_Epoch_Time_s
+VAE_Exp1_Latent256,vae,50,64,0.001,256,Standard VAE Phase 1,321.18,0.00,0.2018,0.0000,1.86,0.00,0.5310,0.0000,185.04,3.70
