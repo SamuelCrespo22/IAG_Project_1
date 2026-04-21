@@ -19,11 +19,11 @@ MODEL_TYPE = "gan"
 USE_SUBSET = True  # True for Phase 1 (20%). False for Phase 2 (100%).
 
 # --- EXPERIMENT HYPERPARAMETERS ---
-EXP_NAME = "DCGAN_Exp1_Latent100"
-EPOCHS = 20        
+EXP_NAME = "DCGAN_Exp4_Latent128_Lr1e-4"
+EPOCHS = 50        
 BATCH_SIZE = 128
 LR = 0.0002
-LATENT_DIM = 100
+LATENT_DIM = 128
 
 print(f"=== STARTING DCGAN EXPERIMENT ON DEVICE: {DEVICE} ===")
 

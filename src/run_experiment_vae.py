@@ -18,7 +18,7 @@ MODEL_TYPE = "vae"
 USE_SUBSET = True  # True for Phase 1 (20%). False for Phase 2 (100%).
 
 # --- EXPERIMENT HYPERPARAMETERS ---
-EXP_NAME = "VAE_Exp1_Latent256"
+EXP_NAME = "VAE_Exp5_Latent256_Lr5e-4"
 EPOCHS = 50
 BATCH_SIZE = 64
 LR = 1e-3

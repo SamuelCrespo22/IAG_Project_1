@@ -18,11 +18,11 @@ MODEL_TYPE = "diffusion"
 USE_SUBSET = True  # True for Phase 1 (20%).
 
 # --- EXPERIMENT HYPERPARAMETERS ---
-EXP_NAME = "Diffusion_Exp1_T500"
-EPOCHS = 50        # Diffusion models require a lot of epochs. Adjust based on available time.
+EXP_NAME = "Diffusion_Exp6_T1000_TD128"
+EPOCHS = 50        
 BATCH_SIZE = 64
 LR = 2e-4
-T_STEPS = 500      # 500 vs 1000 is a great comparison for Phase 1
+T_STEPS = 1000     
 TIME_DIM = 128
 
 print(f"=== STARTING DIFFUSION EXPERIMENT ON DEVICE: {DEVICE} ===")
@@ -50,14 +50,15 @@ test_loader = get_dataloader(
 # Train Diffusion Model
 # =================================================================
 # train_diffusion returns both the U-Net architecture and the DDPM process class
+
 unet, ddpm, total_time, avg_epoch_time = train_diffusion(
     train_loader,
     num_epochs=EPOCHS,
     device=DEVICE,
     lr=LR,
-    T=T_STEPS,
-    time_dim=TIME_DIM
+    timesteps=T_STEPS 
 )
+
 
 # =================================================================
 # Save Model and create Visual Grid
@@ -90,7 +91,7 @@ diffusion_for_evaluation = DiffusionGeneratorWrapper(ddpm)
 generate_and_save_visual_grid(
     model=diffusion_for_evaluation, 
     device=DEVICE, 
-    latent_dim=TIME_DIM, # Not strictly used by DDPM.sample, but required by the utils function signature
+    latent_dim=1, # Not strictly used by DDPM.sample, but required by the utils function signature
     model_type=MODEL_TYPE, 
     filename=f"grid_{EXP_NAME}.png"
 )
