@@ -10,7 +10,7 @@ data/*
 results/checkpoints/*.pt
 results/checkpoints/*.pth
 results/checkpoints/*.ckpt
-
+.pth
 # (Opcional) Ignorar imagens geradas se forem demasiadas, 
 # mas podes querer comentar isto se quiseres partilhar alguns exemplos
 # results/samples/*.png
