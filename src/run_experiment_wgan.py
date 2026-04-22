@@ -19,9 +19,9 @@ MODEL_TYPE = "wgan"
 USE_SUBSET = True  # True for Phase 1 (20%).
 
 # --- EXPERIMENT HYPERPARAMETERS ---
-EXP_NAME = "WGAN_Exp1_Latent100"
+EXP_NAME = "WGAN_Exp5_Latent100_BS128"
 EPOCHS = 100 # 100 WGAN epochs ~= 20 DCGAN epochs
-BATCH_SIZE = 64
+BATCH_SIZE = 128
 LR = 1e-4
 LATENT_DIM = 100
 
