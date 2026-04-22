@@ -18,10 +18,10 @@ MODEL_TYPE = "diffusion"
 USE_SUBSET = True  # True for Phase 1 (20%).
 
 # --- EXPERIMENT HYPERPARAMETERS ---
-EXP_NAME = "Diffusion_Exp8_T1000_E200"
-EPOCHS = 200        
+EXP_NAME = "Diffusion_Exp10_T1000_E500_Lr1e-4"
+EPOCHS = 500       
 BATCH_SIZE = 64
-LR = 2e-4
+LR = 1e-4
 T_STEPS = 1000    
 TIME_DIM = 128
 

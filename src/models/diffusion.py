@@ -3,9 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
-# =================================================================
-# Sinusoidal Time Embedding (Encodes the timestep 't')
-# =================================================================
+# ======================================================
+# Sinusoidal Time Embedding
+# ======================================================
 class SinusoidalTimeEmbedding(nn.Module):
     def __init__(self, dim):
         super().__init__()
@@ -21,9 +21,9 @@ class SinusoidalTimeEmbedding(nn.Module):
         return emb
 
 
-# =================================================================
-# Convolutional Block with GroupNorm and Time Embedding injection
-# =================================================================
+# ======================================================
+# Convolutional Block with GroupNorm + Time Embedding
+# ======================================================
 class ConvBlock(nn.Module):
     def __init__(self, in_ch, out_ch, time_dim, groups=8):
         super().__init__()
@@ -44,9 +44,59 @@ class ConvBlock(nn.Module):
         return F.relu(h + t)
 
 
-# =================================================================
-# Symmetric U-Net for 32x32 images
-# =================================================================
+# ======================================================
+# Self-Attention Block (Spatial Attention)
+# ======================================================
+class SelfAttention(nn.Module):
+    def __init__(self, channels):
+        super().__init__()
+        self.channels = channels
+        
+        # O GroupNorm ajuda a estabilizar o treino, igual às convoluções
+        self.group_norm = nn.GroupNorm(8, channels)
+        
+        # Convoluções 1x1 para gerar as Queries, Keys e Values (Q, K, V)
+        self.qkv = nn.Conv2d(channels, channels * 3, 1)
+        
+        # Convolução 1x1 final para projetar o resultado
+        self.proj = nn.Conv2d(channels, channels, 1)
+
+    def forward(self, x):
+        B, C, H, W = x.shape
+        
+        # 1. Normalizar a entrada
+        h = self.group_norm(x)
+        
+        # 2. Gerar Q, K e V
+        qkv = self.qkv(h) # Fica com tamanho (B, 3*C, H, W)
+        q, k, v = torch.chunk(qkv, 3, dim=1) # Separa em 3 tensores de tamanho (B, C, H, W)
+        
+        # 3. Redimensionar (Flatten) a altura e largura (H*W) para calcular a atenção
+        # Transforma de (B, C, H, W) para (B, C, N) onde N = H*W
+        q = q.view(B, C, -1)
+        k = k.view(B, C, -1)
+        v = v.view(B, C, -1)
+        
+        # 4. Calcular os "Attention Scores" (Q * K^T / sqrt(C))
+        # q.transpose passa a (B, N, C). Multiplica por k (B, C, N) -> resultado (B, N, N)
+        attn_scores = torch.bmm(q.transpose(1, 2), k) * (C ** (-0.5))
+        attn_probs = F.softmax(attn_scores, dim=-1)
+        
+        # 5. Aplicar os scores aos Values (V)
+        # attn_probs (B, N, N) * v.transpose (B, N, C) -> (B, N, C)
+        out = torch.bmm(attn_probs, v.transpose(1, 2))
+        
+        # 6. Voltar ao formato de imagem original (B, C, H, W)
+        out = out.transpose(1, 2).view(B, C, H, W)
+        
+        # 7. Projeção final e "Residual Connection" (soma com a entrada original)
+        out = self.proj(out)
+        return x + out
+
+
+# ======================================================
+# U-Net 32x32 with Self-Attention in Bottleneck
+# ======================================================
 class UNet32(nn.Module):
     def __init__(self, time_dim=128):
         super().__init__()
@@ -66,67 +116,74 @@ class UNet32(nn.Module):
         self.pool = nn.MaxPool2d(2)
 
         # -------- Bottleneck --------
-        self.mid = ConvBlock(256, 256, time_dim)
+        self.mid1 = ConvBlock(256, 256, time_dim)
+        self.mid_attn = SelfAttention(256)
+        self.mid2 = ConvBlock(256, 256, time_dim)
 
         # -------- Decoder --------
-        # Fix: Ensure channels match exactly after torch.cat
         self.up3 = nn.ConvTranspose2d(256, 256, 2, stride=2)
-        # 256 (from up3) + 256 (from x3) = 512 input channels
-        self.dec3 = ConvBlock(512, 128, time_dim) 
+        self.dec3 = ConvBlock(512, 128, time_dim)
 
         self.up2 = nn.ConvTranspose2d(128, 128, 2, stride=2)
-        # 128 (from up2) + 128 (from x2) = 256 input channels
         self.dec2 = ConvBlock(256, 64, time_dim)
 
         self.up1 = nn.ConvTranspose2d(64, 64, 2, stride=2)
-        # 64 (from up1) + 64 (from x1) = 128 input channels
         self.dec1 = ConvBlock(128, 64, time_dim)
 
-        # Final Output: Predict the noise added to the image
+        # Output: predicted noise
         self.out = nn.Conv2d(64, 3, 1)
 
     def forward(self, x, t):
         t_emb = self.time_mlp(t)
 
         # -------- Encoder --------
-        x1 = self.enc1(x, t_emb)              # Output: 32x32, 64 ch
-        x2 = self.enc2(self.pool(x1), t_emb)  # Output: 16x16, 128 ch
-        x3 = self.enc3(self.pool(x2), t_emb)  # Output: 8x8,  256 ch
+        x1 = self.enc1(x, t_emb)              # 32x32, 64
+        x2 = self.enc2(self.pool(x1), t_emb)  # 16x16, 128
+        x3 = self.enc3(self.pool(x2), t_emb)  #  8x8, 256
 
         # -------- Bottleneck --------
-        h = self.mid(self.pool(x3), t_emb)    # Output: 4x4,  256 ch
+        h = self.mid1(self.pool(x3), t_emb)   #  4x4, 256
+        h = self.mid_attn(h)
+        h = self.mid2(h, t_emb)
 
         # -------- Decoder --------
-        h = self.up3(h)                       # Output: 8x8, 256 ch
+        h = self.up3(h)
         h = self.dec3(torch.cat([h, x3], dim=1), t_emb)
 
-        h = self.up2(h)                       # Output: 16x16, 128 ch
+        h = self.up2(h)
         h = self.dec2(torch.cat([h, x2], dim=1), t_emb)
 
-        h = self.up1(h)                       # Output: 32x32, 64 ch
-        # Notice we concatenate with x1 (Encoder feature map), not x (Raw image)
+        h = self.up1(h)
         h = self.dec1(torch.cat([h, x1], dim=1), t_emb)
 
         return self.out(h)
 
+# ======================================================
+# Cosine Beta Schedule (Nichol & Dhariwal, 2021)
+# ======================================================
+def cosine_beta_schedule(timesteps, s=0.008):
+    steps = timesteps + 1
+    x = torch.linspace(0, timesteps, steps)
+
+    alphas_cumprod = torch.cos(
+        ((x / timesteps) + s) / (1.0 + s) * math.pi * 0.5
+    ) ** 2
+    alphas_cumprod = alphas_cumprod / alphas_cumprod[0]
+
+    betas = 1 - (alphas_cumprod[1:] / alphas_cumprod[:-1])
+    return torch.clamp(betas, 1e-4, 0.999)
+
 
 # ======================================================
-# Scheduler
+# DDPM
 # ======================================================
-def linear_beta_schedule(T):
-    return torch.linspace(1e-4, 0.02, T)
-
-
-# =================================================================
-# DDPM (Denoising Diffusion Probabilistic Models) Process
-# =================================================================
 class DDPM:
     def __init__(self, model, T=1000, device="cpu"):
         self.model = model.to(device)
         self.T = T
         self.device = device
 
-        self.betas = linear_beta_schedule(T).to(device)
+        self.betas = cosine_beta_schedule(T).to(device)
         self.alphas = 1.0 - self.betas
         self.alpha_bar = torch.cumprod(self.alphas, dim=0)
 
