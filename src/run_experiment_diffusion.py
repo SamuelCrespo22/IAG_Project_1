@@ -18,11 +18,11 @@ MODEL_TYPE = "diffusion"
 USE_SUBSET = True  # True for Phase 1 (20%).
 
 # --- EXPERIMENT HYPERPARAMETERS ---
-EXP_NAME = "Diffusion_Exp10_T1000_E500_Lr1e-4"
+EXP_NAME = "Diffusion_Exp15_T500_E500_LrNotFixed"
 EPOCHS = 500       
 BATCH_SIZE = 64
-LR = 1e-4
-T_STEPS = 1000    
+LR = 7.5e-5
+T_STEPS = 500  
 TIME_DIM = 128
 
 print(f"=== STARTING DIFFUSION EXPERIMENT ON DEVICE: {DEVICE} ===")

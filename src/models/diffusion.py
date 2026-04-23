@@ -161,17 +161,8 @@ class UNet32(nn.Module):
 # ======================================================
 # Cosine Beta Schedule (Nichol & Dhariwal, 2021)
 # ======================================================
-def cosine_beta_schedule(timesteps, s=0.008):
-    steps = timesteps + 1
-    x = torch.linspace(0, timesteps, steps)
-
-    alphas_cumprod = torch.cos(
-        ((x / timesteps) + s) / (1.0 + s) * math.pi * 0.5
-    ) ** 2
-    alphas_cumprod = alphas_cumprod / alphas_cumprod[0]
-
-    betas = 1 - (alphas_cumprod[1:] / alphas_cumprod[:-1])
-    return torch.clamp(betas, 1e-4, 0.999)
+def linear_beta_schedule(T):
+    return torch.linspace(1e-4, 0.02, T)
 
 
 # ======================================================
@@ -183,7 +174,7 @@ class DDPM:
         self.T = T
         self.device = device
 
-        self.betas = cosine_beta_schedule(T).to(device)
+        self.betas = linear_beta_schedule(T).to(device)
         self.alphas = 1.0 - self.betas
         self.alpha_bar = torch.cumprod(self.alphas, dim=0)
 
@@ -219,3 +210,74 @@ class DDPM:
             ) + torch.sqrt(beta) * noise
 
         return x
+
+# import torch
+# import torch.nn.functional as F
+# import math
+
+# # ======================================================
+# # Cosine Beta Schedule (Nichol & Dhariwal, 2021)
+# # ======================================================
+# def cosine_beta_schedule(timesteps, s=0.008):
+#     steps = timesteps + 1
+#     x = torch.linspace(0, timesteps, steps)
+
+#     alphas_cumprod = torch.cos(
+#         ((x / timesteps) + s) / (1.0 + s) * math.pi * 0.5
+#     ) ** 2
+#     alphas_cumprod = alphas_cumprod / alphas_cumprod[0]
+
+#     betas = 1 - (alphas_cumprod[1:] / alphas_cumprod[:-1])
+#     return torch.clamp(betas, 1e-4, 0.999)
+
+
+# # ======================================================
+# # DDPM
+# # ======================================================
+# class DDPM:
+#     def __init__(self, model, T=1000, device="cpu"):
+#         self.model = model.to(device)
+#         self.T = T
+#         self.device = device
+
+#         self.betas = cosine_beta_schedule(T).to(device)
+#         self.alphas = 1.0 - self.betas
+#         self.alpha_bar = torch.cumprod(self.alphas, dim=0)
+
+#     def forward_diffusion(self, x0, t, noise=None):
+#         if noise is None:
+#             noise = torch.randn_like(x0)
+
+#         a_bar = self.alpha_bar[t][:, None, None, None]
+#         return torch.sqrt(a_bar) * x0 + torch.sqrt(1 - a_bar) * noise, noise
+
+#     def loss(self, x0):
+#         B = x0.size(0)
+#         t = torch.randint(0, self.T, (B,), device=self.device)
+#         x_noisy, noise = self.forward_diffusion(x0, t)
+        
+#         # ALTERAÇÃO: Adicionar .sample para extrair o tensor gerado pelo diffusers
+#         noise_pred = self.model(x_noisy, t).sample
+#         return F.mse_loss(noise_pred, noise)
+
+#     @torch.no_grad()
+#     def sample(self, n):
+#         # NOTA: Se mudares o tamanho das tuas imagens, altera o 32, 32 aqui!
+#         x = torch.randn(n, 3, 32, 32, device=self.device)
+
+#         for t in reversed(range(self.T)):
+#             t_batch = torch.full((n,), t, device=self.device, dtype=torch.long)
+            
+#             # ALTERAÇÃO: Adicionar .sample aqui também
+#             eps = self.model(x, t_batch).sample
+
+#             alpha = self.alphas[t]
+#             alpha_bar = self.alpha_bar[t]
+#             beta = self.betas[t]
+
+#             noise = torch.randn_like(x) if t > 0 else 0
+#             x = (1 / torch.sqrt(alpha)) * (
+#                 x - (beta / torch.sqrt(1 - alpha_bar)) * eps
+#             ) + torch.sqrt(beta) * noise
+
+#         return x
