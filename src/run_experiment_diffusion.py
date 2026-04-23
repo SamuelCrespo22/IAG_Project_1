@@ -15,13 +15,13 @@ else:
     DEVICE = "cpu"
 
 MODEL_TYPE = "diffusion"
-USE_SUBSET = True  # True for Phase 1 (20%).
+USE_SUBSET = False  # True for Phase 1 (20%).
 
 # --- EXPERIMENT HYPERPARAMETERS ---
-EXP_NAME = "Diffusion_Exp15_T500_E500_LrNotFixed"
+EXP_NAME = "Diffusion_Exp1_phase2_T500_E500_LrNotFixed"
 EPOCHS = 500       
 BATCH_SIZE = 64
-LR = 7.5e-5
+LR = 5e-5
 T_STEPS = 500  
 TIME_DIM = 128
 
