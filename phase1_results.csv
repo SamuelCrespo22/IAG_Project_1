@@ -29,3 +29,4 @@ Diffusion_Exp12_T1000_E500_Lr5e-5,diffusion,500,64,5e-05,128,Diffusion with T=10
 Diffusion_Exp13_T500_E500_Lr5e-5,diffusion,500,64,5e-05,128,Diffusion with T=500 sem cosine beta scheduler,118.35,0.21,0.0645,0.0004,3.74,0.06,0.6418,0.0017,4999.08,10.00
 Diffusion_Exp14_T500_E500_LrNotFixed,diffusion,500,64,5e-05,128,Diffusion with T=500 sem cosine beta scheduler,106.08,1.16,0.0572,0.0016,3.48,0.12,0.5797,0.0038,6181.60,12.36
 Diffusion_Exp15_T500_E500_LrNotFixed,diffusion,500,64,7.5e-05,128,Diffusion with T=500,115.46,1.02,0.0748,0.0030,3.29,0.06,0.5850,0.0041,6150.30,12.30
+Diffusion_Exp1_phase2_T500_E500_LrNotFixed,diffusion,500,64,5e-05,128,Diffusion with T=500,46.36,0.80,0.0319,0.0007,4.06,0.04,0.6021,0.0075,23255.85,46.51
