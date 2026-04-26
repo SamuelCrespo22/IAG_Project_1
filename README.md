@@ -55,4 +55,4 @@ python src/run_experiment_wgan.py
 python src/run_experiment_diffusion.py
 ```
 
-**Note:** This will train the model and also do the evaluation. You should also have the Artbench-10 folder with the dataset inside the root folder for this to work.
+**Note:** This will train the model and also do the evaluation. You should also have the Artbench-10 folder with the dataset inside the root folder for this to work. You can download it here: https://www.kaggle.com/datasets/alexanderliao/artbench10. Then, put the folder in the root folder and rename it to "ArtBench-10".
