@@ -8,6 +8,7 @@ import lpips
 import ssl
 import warnings
 
+
 warnings.filterwarnings("ignore")
 
 # Workaround for macOS.
@@ -17,8 +18,8 @@ ssl._create_default_https_context = ssl._create_unverified_context
 NUM_SAMPLES = 5000     # 1000 for Phase 1. Change to 5000 for Phase 2.
 NUM_SEEDS = 10          # 3 seeds for Phase 1. Change to 10 for Phase 2.
 KID_SUBSETS = 50
-KID_SUBSET_SIZE = 500
-BATCH_SIZE = 64        # Adjust based on GPU VRAM.
+KID_SUBSET_SIZE = 100
+BATCH_SIZE = 64
 
 def prepare_images_for_metrics(images_tensor, model_type="gan"):
     """
