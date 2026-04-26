@@ -49,8 +49,6 @@ test_loader = get_dataloader(
 # =================================================================
 # Train Diffusion Model
 # =================================================================
-# train_diffusion returns both the U-Net architecture and the DDPM process class
-
 unet, ddpm, total_time, avg_epoch_time = train_diffusion(
     train_loader,
     num_epochs=EPOCHS,
@@ -59,17 +57,14 @@ unet, ddpm, total_time, avg_epoch_time = train_diffusion(
     timesteps=T_STEPS 
 )
 
-
 # =================================================================
 # Save Model and create Visual Grid
 # =================================================================
-# Save the U-Net weights, as it contains all the learnable parameters
 save_model(unet, f"weights_{EXP_NAME}.pth")
 
 # =================================================================
 # Evaluation
 # =================================================================
-# We create a clever wrapper to bridge the DDPM class with our utils and evaluation scripts
 class DiffusionGeneratorWrapper(torch.nn.Module):
     def __init__(self, ddpm_process):
         super().__init__()
@@ -83,7 +78,6 @@ class DiffusionGeneratorWrapper(torch.nn.Module):
         else:
             batch_size = x
             
-        # Generate images using the reverse diffusion process
         return self.ddpm.sample(batch_size)
 
 diffusion_for_evaluation = DiffusionGeneratorWrapper(ddpm)
@@ -97,7 +91,12 @@ generate_and_save_visual_grid(
 )
 
 print("\n=== STARTING DIFFUSION EVALUATION ===")
-all_fid, all_kid, all_is, all_lpips = run_full_evaluation(model_type=MODEL_TYPE, generator=diffusion_for_evaluation, real_dataloader=test_loader, device=DEVICE)
+all_fid, all_kid, all_is, all_lpips = run_full_evaluation(
+    model_type=MODEL_TYPE,
+    generator=diffusion_for_evaluation,
+    real_dataloader=test_loader,
+    device=DEVICE
+)
 
 # =================================================================
 # Log the results

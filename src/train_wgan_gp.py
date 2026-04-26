@@ -5,16 +5,13 @@ from models.wgan_gp import Generator, Critic, weights_init
 from tqdm import tqdm
 import time
 
-# Mathematical function that prevents the Critic from getting too strong
 def compute_gradient_penalty(critic, real_samples, fake_samples, device):
-    # Mix real and fake samples (Interpolation)
+    # Mix real and fake samples.
     alpha = torch.rand((real_samples.size(0), 1, 1, 1), device=device)
     interpolates = (alpha * real_samples + ((1 - alpha) * fake_samples)).requires_grad_(True)
     
-    # Pass the mixture through the Critic
     d_interpolates = critic(interpolates)
     
-    # Calculate gradients of the output with respect to the inputs
     fake_labels = torch.ones_like(d_interpolates)
     gradients = torch.autograd.grad(
         outputs=d_interpolates,
@@ -25,7 +22,7 @@ def compute_gradient_penalty(critic, real_samples, fake_samples, device):
         only_inputs=True,
     )[0]
     
-    # Calculate the gradient norm and penalize if it deviates from 1
+    # Calculate the gradient norm and penalize if it deviates from 1.
     gradients = gradients.view(gradients.size(0), -1)
     gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
     return gradient_penalty
@@ -37,12 +34,11 @@ def train_wgan_gp(dataloader, num_epochs=100, device="cuda", lr=1e-4, latent_dim
     critic = Critic().to(device)
     critic.apply(weights_init)
 
-    # Recommended hyperparameters for WGAN-GP (Different LR and Adam Betas)
     genOpt = Adam(gen.parameters(), lr=lr, betas=(0.0, 0.9))
     criticOpt = Adam(critic.parameters(), lr=lr, betas=(0.0, 0.9))
 
-    lambda_gp = 10 # Weight of the Gradient Penalty
-    n_critic = 5   # Train the Critic 5 times for each time the Generator is trained
+    lambda_gp = 10 # Weight of the Gradient Penalty.
+    n_critic = 5   # Train the Critic 5 times for each time the Generator is trained.
 
     print("[INFO] Starting WGAN-GP training...")
     total_start_time = time.time()
@@ -56,19 +52,16 @@ def train_wgan_gp(dataloader, num_epochs=100, device="cuda", lr=1e-4, latent_dim
             bs = real_imgs.size(0)
 
             # ==========================================
-            # 1. TRAIN THE CRITIC (n_critic times)
+            # TRAIN THE CRITIC (n_critic times)
             # ==========================================
             criticOpt.zero_grad()
 
-            # Score of real images
             real_validity = critic(real_imgs)
             
-            # Score of fake images
             z = torch.randn(bs, latent_dim, 1, 1, device=device)
             fake_imgs = gen(z)
             fake_validity = critic(fake_imgs.detach()) # Detach so we don't train the Generator here
 
-            # Calculate the Gradient Penalty
             gradient_penalty = compute_gradient_penalty(critic, real_imgs.detach(), fake_imgs.detach(), device)
 
             # Critic Loss: (Fake mean - Real mean) + penalty
@@ -77,17 +70,16 @@ def train_wgan_gp(dataloader, num_epochs=100, device="cuda", lr=1e-4, latent_dim
             criticOpt.step()
 
             # ==========================================
-            # 2. TRAIN THE GENERATOR (Only every n_critic times)
+            # TRAIN THE GENERATOR (Only every n_critic times)
             # ==========================================
             if i % n_critic == 0:
                 genOpt.zero_grad()
 
-                # Generate new fakes and get the Critic's score
                 z = torch.randn(bs, latent_dim, 1, 1, device=device)
                 gen_imgs = gen(z)
                 fake_validity = critic(gen_imgs)
 
-                # Generator Loss: Try to maximize the Critic's score (hence, minimize the negative)
+                # Try to maximize the Critic's score (minimize the negative)
                 g_loss = -torch.mean(fake_validity)
                 g_loss.backward()
                 genOpt.step()

@@ -14,7 +14,7 @@ def train_vae(
     latent_dim=128
 ):
     # ----------------------------------------
-    # Modelo e otimizador
+    # Model and optimizer
     # ----------------------------------------
     vae = ConvVAE(latent_dim=latent_dim).to(device)
     optimizer = Adam(vae.parameters(), lr=lr)
@@ -22,7 +22,7 @@ def train_vae(
     total_start_time = time.time()
 
     # ----------------------------------------
-    # Loop de treino
+    # Training loop
     # ----------------------------------------
     for epoch in range(num_epochs):
         vae.train()
@@ -50,7 +50,7 @@ def train_vae(
             progress_bar.set_postfix({"Loss": f"{loss.item():.4f}"})
 
         # ------------------------------------
-        # Estatísticas do epoch
+        # Epoch statistics
         # ------------------------------------
         epoch_duration = time.time() - epoch_start_time
         epoch_mins, epoch_secs = divmod(epoch_duration, 60)
@@ -62,7 +62,7 @@ def train_vae(
         )
 
     # ----------------------------------------
-    # Tempo total
+    # Total time
     # ----------------------------------------
     total_duration = time.time() - total_start_time
     total_mins, total_secs = divmod(total_duration, 60)

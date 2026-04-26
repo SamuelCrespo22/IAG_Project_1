@@ -1,0 +1,2 @@
+Experiment_Name,Model,Epochs,Batch_Size,LR,Latent_Dim,Notes,FID_mean,FID_std,KID_mean,KID_std,IS_mean,IS_std,LPIPS_mean,LPIPS_std,Total_Time_s,Avg_Epoch_Time_s
+Diffusion_Exp1_phase2_T500_E500_LrNotFixed,diffusion,500,64,5e-05,128,Diffusion with T=500,74.53,0.63,0.0554,0.0007,3.61,0.05,0.5819,0.0055,23255.85,46.51

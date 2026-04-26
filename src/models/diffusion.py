@@ -52,44 +52,44 @@ class SelfAttention(nn.Module):
         super().__init__()
         self.channels = channels
         
-        # O GroupNorm ajuda a estabilizar o treino, igual às convoluções
+        # Helps stabilizing the training.
         self.group_norm = nn.GroupNorm(8, channels)
         
-        # Convoluções 1x1 para gerar as Queries, Keys e Values (Q, K, V)
+        # 1x1 convolutions to generate Queries, Keys, and Values (Q, K, V).
         self.qkv = nn.Conv2d(channels, channels * 3, 1)
         
-        # Convolução 1x1 final para projetar o resultado
+        # Final 1x1 convolution to project the result.
         self.proj = nn.Conv2d(channels, channels, 1)
 
     def forward(self, x):
         B, C, H, W = x.shape
         
-        # 1. Normalizar a entrada
+        # Normalize the input.
         h = self.group_norm(x)
         
-        # 2. Gerar Q, K e V
-        qkv = self.qkv(h) # Fica com tamanho (B, 3*C, H, W)
-        q, k, v = torch.chunk(qkv, 3, dim=1) # Separa em 3 tensores de tamanho (B, C, H, W)
+        # Generate Q, K, and V.
+        qkv = self.qkv(h) # (B, 3*C, H, W).
+        q, k, v = torch.chunk(qkv, 3, dim=1) # 3 tensors of size (B, C, H, W).
         
-        # 3. Redimensionar (Flatten) a altura e largura (H*W) para calcular a atenção
-        # Transforma de (B, C, H, W) para (B, C, N) onde N = H*W
+        # Flatten height and width (H*W) to compute attention.
+        # (B, C, H, W) => (B, C, N), where N = H*W.
         q = q.view(B, C, -1)
         k = k.view(B, C, -1)
         v = v.view(B, C, -1)
         
-        # 4. Calcular os "Attention Scores" (Q * K^T / sqrt(C))
-        # q.transpose passa a (B, N, C). Multiplica por k (B, C, N) -> resultado (B, N, N)
+        # Compute "Attention Scores" (Q * K^T / sqrt(C)).
+        # q.transpose becomes (B, N, C). Multiplied by k (B, C, N) -> (B, N, N).
         attn_scores = torch.bmm(q.transpose(1, 2), k) * (C ** (-0.5))
         attn_probs = F.softmax(attn_scores, dim=-1)
         
-        # 5. Aplicar os scores aos Values (V)
-        # attn_probs (B, N, N) * v.transpose (B, N, C) -> (B, N, C)
+        # Apply scores to Values (V).
+        # attn_probs (B, N, N) * v.transpose (B, N, C) -> (B, N, C).
         out = torch.bmm(attn_probs, v.transpose(1, 2))
         
-        # 6. Voltar ao formato de imagem original (B, C, H, W)
+        # Reshape back to original image format (B, C, H, W).
         out = out.transpose(1, 2).view(B, C, H, W)
         
-        # 7. Projeção final e "Residual Connection" (soma com a entrada original)
+        # Final projection and "Residual Connection" (add to original input).
         out = self.proj(out)
         return x + out
 
@@ -101,7 +101,6 @@ class UNet32(nn.Module):
     def __init__(self, time_dim=128):
         super().__init__()
 
-        # Time embedding
         self.time_mlp = nn.Sequential(
             SinusoidalTimeEmbedding(time_dim),
             nn.Linear(time_dim, time_dim),
@@ -130,19 +129,18 @@ class UNet32(nn.Module):
         self.up1 = nn.ConvTranspose2d(64, 64, 2, stride=2)
         self.dec1 = ConvBlock(128, 64, time_dim)
 
-        # Output: predicted noise
         self.out = nn.Conv2d(64, 3, 1)
 
     def forward(self, x, t):
         t_emb = self.time_mlp(t)
 
         # -------- Encoder --------
-        x1 = self.enc1(x, t_emb)              # 32x32, 64
-        x2 = self.enc2(self.pool(x1), t_emb)  # 16x16, 128
-        x3 = self.enc3(self.pool(x2), t_emb)  #  8x8, 256
+        x1 = self.enc1(x, t_emb)              #  32x32,  64
+        x2 = self.enc2(self.pool(x1), t_emb)  #  16x16, 128
+        x3 = self.enc3(self.pool(x2), t_emb)  #  8x8,   256
 
         # -------- Bottleneck --------
-        h = self.mid1(self.pool(x3), t_emb)   #  4x4, 256
+        h = self.mid1(self.pool(x3), t_emb)   #  4x4,   256
         h = self.mid_attn(h)
         h = self.mid2(h, t_emb)
 
@@ -158,8 +156,9 @@ class UNet32(nn.Module):
 
         return self.out(h)
 
+
 # ======================================================
-# Cosine Beta Schedule (Nichol & Dhariwal, 2021)
+# Linear Beta Schedule
 # ======================================================
 def linear_beta_schedule(T):
     return torch.linspace(1e-4, 0.02, T)
@@ -211,13 +210,10 @@ class DDPM:
 
         return x
 
-# import torch
-# import torch.nn.functional as F
-# import math
 
-# # ======================================================
-# # Cosine Beta Schedule (Nichol & Dhariwal, 2021)
-# # ======================================================
+# ======================================================
+# Cosine Beta Schedule
+# ======================================================
 # def cosine_beta_schedule(timesteps, s=0.008):
 #     steps = timesteps + 1
 #     x = torch.linspace(0, timesteps, steps)
@@ -231,9 +227,9 @@ class DDPM:
 #     return torch.clamp(betas, 1e-4, 0.999)
 
 
-# # ======================================================
-# # DDPM
-# # ======================================================
+# ======================================================
+# DDPM
+# ======================================================
 # class DDPM:
 #     def __init__(self, model, T=1000, device="cpu"):
 #         self.model = model.to(device)
@@ -256,19 +252,18 @@ class DDPM:
 #         t = torch.randint(0, self.T, (B,), device=self.device)
 #         x_noisy, noise = self.forward_diffusion(x0, t)
         
-#         # ALTERAÇÃO: Adicionar .sample para extrair o tensor gerado pelo diffusers
+#         # Alteration: Add .sample here to get the predicted noise from the distribution output by the model.
 #         noise_pred = self.model(x_noisy, t).sample
 #         return F.mse_loss(noise_pred, noise)
 
 #     @torch.no_grad()
 #     def sample(self, n):
-#         # NOTA: Se mudares o tamanho das tuas imagens, altera o 32, 32 aqui!
 #         x = torch.randn(n, 3, 32, 32, device=self.device)
 
 #         for t in reversed(range(self.T)):
 #             t_batch = torch.full((n,), t, device=self.device, dtype=torch.long)
             
-#             # ALTERAÇÃO: Adicionar .sample aqui também
+#             # Add .sample here too
 #             eps = self.model(x, t_batch).sample
 
 #             alpha = self.alphas[t]

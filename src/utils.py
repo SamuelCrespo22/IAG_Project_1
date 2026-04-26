@@ -16,7 +16,7 @@ def generate_and_save_visual_grid(model, device, latent_dim, model_type="vae", f
     """
     model.eval()
     with torch.no_grad():
-        # Convolutional GANs need the format (batch, channels, height, width)
+        # Convolutional GANs need the format (batch, channels, height, width).
         if model_type in ["gan", "wgan"]:
             z = torch.randn(64, latent_dim, 1, 1).to(device)
         else:
@@ -27,7 +27,7 @@ def generate_and_save_visual_grid(model, device, latent_dim, model_type="vae", f
         else:
             fake_images = model(z)
             
-        # Denormalize GANs for Matplotlib visualization.
+        # Denormalize for Matplotlib visualization.
         if model_type in ["gan", "wgan", "diffusion"]:
             fake_images = (fake_images + 1.0) / 2.0
             

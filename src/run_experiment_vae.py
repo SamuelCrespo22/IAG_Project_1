@@ -71,8 +71,6 @@ generate_and_save_visual_grid(
 # =================================================================
 # Evaluation
 # =================================================================
-# For evaluate to accept the VAE, create a "wrapper" function that generates
-# the fake images using the .decode() method instead of .forward()
 class VAEGeneratorWrapper(torch.nn.Module):
     def __init__(self, vae_model, latent_dim=128):
         super().__init__()
@@ -87,7 +85,12 @@ class VAEGeneratorWrapper(torch.nn.Module):
 vae_for_evaluation = VAEGeneratorWrapper(trained_vae, latent_dim=LATENT_DIM)
 
 print("\n=== STARTING VAE EVALUATION ===")
-all_fid, all_kid, all_is, all_lpips = run_full_evaluation(model_type=MODEL_TYPE, generator=vae_for_evaluation, real_dataloader=test_loader, device=DEVICE)
+all_fid, all_kid, all_is, all_lpips = run_full_evaluation(
+    model_type=MODEL_TYPE,
+    generator=vae_for_evaluation,
+    real_dataloader=test_loader,
+    device=DEVICE
+)
 
 # =================================================================
 # Log the results

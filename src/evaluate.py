@@ -8,14 +8,13 @@ import lpips
 import ssl
 import warnings
 
-
 warnings.filterwarnings("ignore")
 
 # Workaround for macOS.
 ssl._create_default_https_context = ssl._create_unverified_context
 
 # === EVALUATION CONFIGURATIONS ===
-NUM_SAMPLES = 5000     # 1000 for Phase 1. Change to 5000 for Phase 2.
+NUM_SAMPLES = 5000      # 1000 for Phase 1. Change to 5000 for Phase 2.
 NUM_SEEDS = 10          # 3 seeds for Phase 1. Change to 10 for Phase 2.
 KID_SUBSETS = 50
 KID_SUBSET_SIZE = 100
@@ -27,7 +26,7 @@ def prepare_images_for_metrics(images_tensor, model_type="gan"):
     """
     if model_type in ["gan", "wgan", "diffusion"]:   # [-1, 1] => [0, 1].
         images_0_to_1 = (images_tensor + 1.0) / 2.0
-    elif model_type == "vae":                        # VAE is already in [0, 1].
+    elif model_type == "vae":                        # VAE already in [0, 1].
         images_0_to_1 = images_tensor
     else:
         images_0_to_1 = images_tensor
@@ -44,9 +43,8 @@ def run_full_evaluation(model_type, generator, real_dataloader, device="cuda"):
     loss_fn_vgg = lpips.LPIPS(net='vgg').to(device)
     loss_fn_vgg.eval()
 
-    # TorchMetrics requires `float64`. Since MPS (Mac) doesn't support it,
-    # we allocate on CPU. Initialize OUTSIDE the loop and use reset_real_features=False
-    # to save the computer from processing real images repeatedly!
+    # TorchMetrics requires float64.
+    # use reset_real_features=False to save the computer from processing real images repeatedly.
     metric_device = "cpu" if str(device) == "mps" else device
     
     fid = FrechetInceptionDistance(feature=2048, normalize=False, reset_real_features=False).to(metric_device)
@@ -57,7 +55,7 @@ def run_full_evaluation(model_type, generator, real_dataloader, device="cuda"):
 
     for seed in range(NUM_SEEDS):
         print(f"\nProcessing Seed {seed+1}/{NUM_SEEDS}")
-        torch.manual_seed(seed) # freeze randomness.
+        torch.manual_seed(seed)
         np.random.seed(seed)
         
         # ======================================================
@@ -86,17 +84,15 @@ def run_full_evaluation(model_type, generator, real_dataloader, device="cuda"):
         # ======================================================
         print("Generating new images and extracting features.")
         fake_count = 0
-        generated_batches_for_lpips = [] # Store a few batches for LPIPS
+        generated_batches_for_lpips = []
         
         generator.eval()
         with torch.no_grad():
             while fake_count < NUM_SAMPLES:
                 current_batch_size = min(BATCH_SIZE, NUM_SAMPLES - fake_count)
                 
-                # Generate fake images using the wrapper generator.
                 fake_batch = generator(current_batch_size)
                 
-                # Store the first two batches in float format for LPIPS calculation.
                 if len(generated_batches_for_lpips) < 2:
                     generated_batches_for_lpips.append(fake_batch.clone())
 
@@ -108,8 +104,6 @@ def run_full_evaluation(model_type, generator, real_dataloader, device="cuda"):
                 
                 fake_count += current_batch_size
 
-        # Calculate LPIPS (diversity).
-        # Compare images from batch 0 with batch 1.
         if len(generated_batches_for_lpips) == 2:
             img1 = generated_batches_for_lpips[0]
             img2 = generated_batches_for_lpips[1]
@@ -119,7 +113,6 @@ def run_full_evaluation(model_type, generator, real_dataloader, device="cuda"):
                 img1 = img1 * 2.0 - 1.0
                 img2 = img2 * 2.0 - 1.0
                 
-            # Ensure they have the same size.
             min_len = min(img1.size(0), img2.size(0))
             lpips_score = loss_fn_vgg(img1[:min_len], img2[:min_len]).mean().item()
         else:

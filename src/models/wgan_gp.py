@@ -3,7 +3,6 @@ from torch import flatten
 from torch import nn
 
 class Generator(nn.Module):
-    # The Generator is practically the same as DCGAN's
     def __init__(self, inputDim=100, outputDim=512, outputChannels=3):
         super(Generator, self).__init__()
 
@@ -30,8 +29,7 @@ class Generator(nn.Module):
         return output
 
 class Critic(nn.Module):
-    # ATTENTION: It is called Critic and does not have a Sigmoid!
-    # In WGAN-GP we should not use BatchNorm in the Critic. We use InstanceNorm or nothing.
+    # It is called Critic and does not have a Sigmoid.
     def __init__(self, depth=3, alpha=0.2):
         super(Critic, self).__init__()
 
@@ -44,7 +42,6 @@ class Critic(nn.Module):
         self.fc1 = nn.Linear(4096, 512)
         self.leakyRelu3 = nn.LeakyReLU(alpha, inplace=True)
 
-        # Output of 1 real value (Score), without Sigmoid activation
         self.fc2 = nn.Linear(512, 1)
     
     def forward(self, x):

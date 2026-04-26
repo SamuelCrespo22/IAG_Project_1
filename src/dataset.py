@@ -55,13 +55,13 @@ def get_dataloader(model_type="gan", batch_size=64, use_subset=True, subset_frac
     # Define Transformations
     # ====================================================
 
-    if model_type == "vae": # VAE (uses sigmoid) Dataloader must be in [0, 1].
+    if model_type == "vae":
         transform = transforms.Compose([
             transforms.ToTensor()
         ])
         print(f"[DataLoader] Applying normalization to [0, 1] for {model_type.upper()}.")
 
-    elif model_type in ["gan", "wgan", "diffusion"]: # GAN/WGAN (uses tanh) and Diffusion (noise needs [-1, 1]) Dataloader must be in [-1, 1].
+    elif model_type in ["gan", "wgan", "diffusion"]:
         transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
@@ -77,7 +77,6 @@ def get_dataloader(model_type="gan", batch_size=64, use_subset=True, subset_frac
     
     if use_subset and split == "train":
         num_samples = int(len(hf_dataset) * subset_fraction)
-        # Fix seed to guarantee the same samples for training.
         indices = np.random.RandomState(42).permutation(len(hf_dataset))[:num_samples]
         hf_dataset = hf_dataset.select(indices)
         print(f"[DataLoader] Using subset of {len(hf_dataset)} samples ({subset_fraction*100:.0f}% of train split).")
@@ -96,7 +95,7 @@ def get_dataloader(model_type="gan", batch_size=64, use_subset=True, subset_frac
         batch_size=batch_size, 
         shuffle=(split == "train"), 
         num_workers=0,
-        pin_memory=True, # put data into a fixed space in RAM. Faster transfer of data.
+        pin_memory=True,             # put data into a fixed space in RAM. Faster transfer of data.
         drop_last=(split == "train") # Drop last in train for stability.
     )
     

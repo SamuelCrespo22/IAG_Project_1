@@ -86,7 +86,12 @@ class DCGANGeneratorWrapper(torch.nn.Module):
 dcgan_for_evaluation = DCGANGeneratorWrapper(generator_dcgan, latent_dim=LATENT_DIM)
 
 print("\n=== STARTING DCGAN EVALUATION ===")
-all_fid, all_kid, all_is, all_lpips = run_full_evaluation(model_type=MODEL_TYPE, generator=dcgan_for_evaluation, real_dataloader=test_loader, device=DEVICE)
+all_fid, all_kid, all_is, all_lpips = run_full_evaluation(
+    model_type=MODEL_TYPE,
+    generator=dcgan_for_evaluation,
+    real_dataloader=test_loader,
+    device=DEVICE
+)
 
 # =================================================================
 # Log the results

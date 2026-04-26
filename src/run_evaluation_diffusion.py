@@ -25,7 +25,7 @@ T_STEPS = 500
 print(f"=== STARTING DIFFUSION EVALUATION ON DEVICE: {DEVICE} ===")
 
 # =================================================================
-# Load Data (Apenas o Test Split é necessário para a avaliação)
+# Load Data
 # =================================================================
 test_loader = get_dataloader(
     model_type=MODEL_TYPE,
@@ -67,7 +67,6 @@ class DiffusionGeneratorWrapper(torch.nn.Module):
 
 diffusion_for_evaluation = DiffusionGeneratorWrapper(ddpm)
 
-# (Opcional) Gerar uma grid visual rápida para confirmar que o modelo carregou bem
 generate_and_save_visual_grid(
     model=diffusion_for_evaluation, 
     device=DEVICE, 
@@ -94,13 +93,13 @@ log_experiment_to_csv(
     csv_file="evaluation_results.csv",
     exp_name=EXP_NAME,
     model_type=MODEL_TYPE,
-    epochs="N/A",            # Como é só avaliação, não temos o valor exato aqui
+    epochs="N/A",            
     batch_size=BATCH_SIZE,
-    lr="N/A",                # Como é só avaliação, não temos o valor exato aqui
+    lr="N/A",                
     latent_dim=128,
     extra_notes=f"Evaluation only. Weights: {WEIGHTS_PATH}",
     all_fid=all_fid, all_kid=all_kid, all_is=all_is, all_lpips=all_lpips,
-    total_time_s=0, avg_epoch_time_s=0  # Não aplicável para avaliação
+    total_time_s=0, avg_epoch_time_s=0
 )
 
 print("=== DIFFUSION EVALUATION FULLY COMPLETED! ===")

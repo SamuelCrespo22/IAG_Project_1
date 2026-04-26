@@ -46,7 +46,7 @@ class Discriminator(nn.Module):
         self.leakyRelu1 = nn.LeakyReLU(alpha, inplace=True)
 
         self.conv2 = nn.Conv2d(32, 64, 4, 2, 1)
-        self.batchNorm2 = nn.BatchNorm2d(64) # BN => stability.
+        self.batchNorm2 = nn.BatchNorm2d(64)
         self.leakyRelu2 = nn.LeakyReLU(alpha, inplace=True)
 
         # For 32x32 images, after two convs of stride 2, we get 8x8.

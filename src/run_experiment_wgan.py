@@ -16,7 +16,7 @@ else:
     DEVICE = "cpu"
     
 MODEL_TYPE = "wgan"
-USE_SUBSET = True  # True for Phase 1 (20%).
+USE_SUBSET = True
 
 # --- EXPERIMENT HYPERPARAMETERS ---
 EXP_NAME = "WGAN_Exp5_Latent100_BS128"
@@ -85,7 +85,12 @@ class WGANGeneratorWrapper(torch.nn.Module):
 wgan_for_evaluation = WGANGeneratorWrapper(generator_wgan, latent_dim=LATENT_DIM)
 
 print("\n=== STARTING WGAN-GP EVALUATION ===")
-all_fid, all_kid, all_is, all_lpips = run_full_evaluation(model_type=MODEL_TYPE, generator=wgan_for_evaluation, real_dataloader=test_loader, device=DEVICE)
+all_fid, all_kid, all_is, all_lpips = run_full_evaluation(
+    model_type=MODEL_TYPE,
+    generator=wgan_for_evaluation,
+    real_dataloader=test_loader,
+    device=DEVICE
+)
 
 # =================================================================
 # Log the results
