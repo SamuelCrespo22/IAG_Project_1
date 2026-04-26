@@ -1,22 +1,17 @@
-# Core Machine Learning & Vision
 torch>=2.0.0
 torchvision>=0.15.0
 
-# Modelos de Difusão (sugerido pelo enunciado)
 diffusers>=0.25.0
 accelerate>=0.26.0
 
-# Ferramentas de Avaliação (FID e KID)
 torch-fidelity>=0.3.0
 scipy>=1.10.0
 
-# Manipulação de Dados e Visualização
 numpy>=1.24.0
 matplotlib>=3.7.0
 Pillow>=9.5.0
 pandas>=2.0.0
 
-# Utilitários de Desenvolvimento
 tqdm>=4.65.0
 jupyter>=1.0.0
 notebook>=6.5.0

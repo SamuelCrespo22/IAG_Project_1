@@ -1,35 +1,24 @@
-# Projeto 1: ArtBench Generative Modeling
+# Project 1: ArtBench Generative Modeling
 
-Este repositório contém o código e os resultados do Projeto 1 da disciplina de Inteligência Artificial Generativa (2025/2026), da Universidade de Coimbra. 
+This repository contains the code and results of the first project from the Generative Artificial Intelligence course (2025/2026), University of Coimbra.
 
-O objetivo principal deste projeto é conceber, treinar e avaliar diferentes famílias de modelos generativos na criação de imagens de obras de arte, utilizando o dataset **ArtBench-10** (resolução 32x32 RGB).
+The main objective is to conceive, train and evaluate different families of generative models in the creation of artwork images, using the **ArtBench-10** dataset (32x32 RGB resolution).
 
-**Autores:**
-* [Nome do Aluno 1] - [Número de Estudante 1]
-* [Nome do Aluno 2] - [Número de Estudante 2]
+**Authors:**
 
----
-
-## 🏗️ Modelos Implementados
-Foram implementadas e comparadas três famílias de modelos:
-1. **Autoencoders:** Variational Autoencoder (VAE)
-2. **GANs:** Deep Convolutional GAN (DCGAN)
-3. **Modelos de Difusão:** [Nome do modelo de difusão escolhido]
+- Cláudio Catarino
+- Samuel Crespo
 
 ---
 
-## 📊 Protocolo de Avaliação
-Os modelos foram inicialmente iterados usando um subset de 20% dos dados. A avaliação final no dataset completo (50.000 imagens) segue um protocolo rigoroso:
-* Geração de **5.000 amostras** por modelo.
-* Comparação com **5.000 imagens reais**.
-* Cálculo das métricas **FID** (Fréchet Inception Distance) e **KID** (Kernel Inception Distance).
-* Repetição de todo o processo de avaliação usando **10 *seeds* aleatórias** diferentes para robustez estatística.
+## Implemented Models
+
+1. **Autoencoders:** Variational Autoencoder (VAE);
+2. **GANs:** Deep Convolutional GAN (DCGAN), Wasserstein GAN (WGAN);
+3. **Diffusion Models:** Denoising Diffusion Probabilistic Model (DDPM).
 
 ---
 
-## ⚙️ Instalação e Configuração
+## Evaluation Protocol
 
-1. Clona este repositório:
-   ```bash
-   git clone [https://github.com/teu-utilizador/artbench-generative-modeling.git](https://github.com/teu-utilizador/artbench-generative-modeling.git)
-   cd artbench-generative-modeling
+The models were initially tested with a 20% subset of the dataset. The best model was chosen by the lowest FID calculated. The chosen model was then trained on the full dataset and went through rigorous quantitative evaluation (FID, KID, IS, LPIPS) for 10 random seeds.
